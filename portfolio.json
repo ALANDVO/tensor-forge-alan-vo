@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "tensor-forge-alan-vo",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: tensor-forge-alan-vo",
+  "workflows": [
+    "Analyze pasted source code and forge an agent-native CLI command manifest with typed argument schemas",
+    "Save, list and retrieve forged command manifests in persistent SQLite storage",
+    "Export a forge result as shell-ready commands and as portable JSON"
+  ],
+  "auth": "none",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "roadmap_auth": "oidc-keycloak-saml-broker (planned milestone)",
+  "roadmap_llm": "opt-in advisory explanations with provider adapters (planned milestone)",
+  "status": "work-in-progress"
+}

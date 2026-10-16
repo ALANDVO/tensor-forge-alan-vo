@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: tensor-forge-backend:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      # In-memory SQLite is the default (demo). Mount a volume to persist.
+      - DATABASE_URL="sqlite:///./data/tensor-forge.db"
+      - DEMO_MODE=true
+      - ENVIRONMENT=development
+    volumes:
+      - tf-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: tensor-forge-frontend:local
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      - VITE_API_BASE=http://localhost:8000/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Keycloak is included for the planned auth-oidc milestone (OIDC + SAML
+  # identity brokering). It is NOT wired to the application in this round;
+  # see STATUS.md / PLAN.md. Exposed on localhost:8081 for local dev only.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.5
+    command: start-dev
+    profiles: ["auth"]
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=change-me
+      - KC_DB=dev-file
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/realms/master"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  tf-data:
+  keycloak-data:
