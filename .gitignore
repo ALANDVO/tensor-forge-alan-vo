@@ -35,3 +35,4 @@ frontend/.vite/
 *.swp
 .idea/
 .vscode/
+venv/
