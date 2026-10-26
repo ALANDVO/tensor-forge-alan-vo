@@ -233,55 +233,25 @@ def _argparse_add_argument(call: ast.Call) -> _ArgparseCall | None:
     )
 
 
-def _argparse_entry_points(tree: ast.Module) -> list[EntryPoint]:
-    """Synthesize one ``main`` entry point from argparse usage in the module."""
-    add_calls: list[_ArgparseCall] = []
-    has_parse_args = False
-    has_main_block = False
+def _extract_argparse_prog(tree: ast.Module) -> str | None:
+    """Extract the prog name from ArgumentParser(...) instantiation if present."""
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if node.func.attr == "parse_args":
-                has_parse_args = True
-            parsed = _argparse_add_argument(node)
-            if parsed is not None:
-                add_calls.append(parsed)
-        if isinstance(node, ast.If):
-            if _is_main_guard(node):
-                has_main_block = True
-    if not (has_parse_args or has_main_block):
-        return []
+        if isinstance(node, ast.Call):
+            func = node.func
+            # Match argparse.ArgumentParser(...) or ArgumentParser(...)
+            if isinstance(func, ast.Attribute) and func.attr == "ArgumentParser":
+                if isinstance(func.value, ast.Name) and func.value.id == "argparse":
+                    for kw in node.keywords:
+                        if kw.arg == "prog" and isinstance(kw.value, ast.Constant):
+                            return str(kw.value.value)
+            elif isinstance(func, ast.Name) and func.id == "ArgumentParser":
+                for kw in node.keywords:
+                    if kw.arg == "prog" and isinstance(kw.value, ast.Constant):
+                        return str(kw.value.value)
+    return None
 
-    args: list[ArgumentSpec] = []
-    for c in add_calls:
-        # Resolve the destination name.
-        if c.dest:
-            dest = c.dest
-        else:
-            dest = next((f.lstrip("-") for f in c.flags if f.startswith("--")), None)
-            if not dest and c.flags:
-                dest = c.flags[0]  # positional argument
-        if not dest:
-            continue
-        is_bool = c.py_type == "boolean"
-        if is_bool:
-            required = False
-            cli_type = "boolean"
-            py_type = "bool"
-        elif c.required is not None:
-            required = c.required
-            py_type = _strip_optional(c.py_type) if c.py_type else "string"
-            cli_type = _cli_type_for(c.py_type)
-        else:
-            is_optional = any(f.startswith("--") for f in c.flags)
-            required = not is_optional
-            py_type = _strip_optional(c.py_type) if c.py_type else "string"
-            cli_type = _cli_type_for(c.py_type)
-        args.append(ArgumentSpec(
-            name=dest, py_type=py_type, cli_type=cli_type,
-            required=required, default_repr=c.default_repr, help=c.help or "",
-        ))
-    kind = "argparse" if has_parse_args else "main_block"
-    return [EntryPoint(name="main", kind=kind, arguments=args, docstring="argparse entry point", location="module")]
+
+def _argparse_entry_points(tree: ast.Module) -> list[EntryPoint]:
 
 
 def _is_main_guard(node: ast.If) -> bool:
