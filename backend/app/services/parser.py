@@ -214,15 +214,27 @@ def _argparse_add_argument(call: ast.Call) -> _ArgparseCall | None:
     if "help" in opts and isinstance(opts["help"], ast.Constant):
         help_text = str(opts["help"].value)
     action = opts.get("action")
-    is_bool = False
-    if isinstance(action, ast.Constant) and action.value == "store_true":
-        is_bool = True
-    py_type = "boolean" if is_bool else _annotation_name(opts.get("type"))
     default_node = opts.get("default")
+    is_bool = False
+    if isinstance(action, ast.Constant) and action.value in ("store_true", "store_false"):
+        is_bool = True
+        # store_true defaults to False, store_false defaults to True
+        if default_node is None:
+            default_node = ast.Constant(value=(action.value == "store_false"))
+    py_type = "bool" if is_bool else _annotation_name(opts.get("type"))
     default_rep = _default_repr(default_node)
     required = None
     if "required" in opts and isinstance(opts["required"], ast.Constant):
         required = bool(opts["required"].value)
+    elif is_bool:
+        # Boolean flags (store_true/store_false) are never required
+        required = False
+    elif flags and not any(f.startswith("-") for f in flags):
+        # Positional arguments (no -- prefix) are required by default
+        required = True
+    elif flags:
+        # Optional flags (--prefix) are not required by default
+        required = False
     return _ArgparseCall(
         flags=flags,
         dest=dest,
@@ -252,6 +264,35 @@ def _extract_argparse_prog(tree: ast.Module) -> str | None:
 
 
 def _argparse_entry_points(tree: ast.Module) -> list[EntryPoint]:
+    """Extract CLI entry points from argparse.ArgumentParser().parse_args() call sites."""
+    points: list[EntryPoint] = []
+    # argparse entry points are conventionally named "main"
+    prog_name = "main"
+    # Find all add_argument calls in the module
+    specs: list[ArgumentSpec] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            apc = _argparse_add_argument(node)
+            if apc:
+                dest = apc.dest or (apc.flags[0].lstrip("-") if apc.flags else "arg")
+                specs.append(ArgumentSpec(
+                    name=dest,
+                    py_type=apc.py_type or "str",
+                    cli_type=_cli_type_for(apc.py_type or "str"),
+                    required=apc.required if apc.required is not None else (apc.default_repr is None),
+                    default_repr=apc.default_repr,
+                    help=apc.help or "",
+                ))
+
+    if specs:
+        points.append(EntryPoint(
+            name=prog_name,
+            kind="argparse",
+            arguments=specs,
+            docstring="",
+            location="argparse",
+        ))
+    return points
 
 
 def _is_main_guard(node: ast.If) -> bool:
