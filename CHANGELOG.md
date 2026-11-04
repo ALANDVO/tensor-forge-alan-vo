@@ -1,9 +1,20 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.1.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+### Fixed
+- `argparse` entry point extraction in `backend/app/services/parser.py`:
+  Implemented `_argparse_entry_points()` to detect `add_argument()` calls and
+  extract typed argument schemas. Boolean flags (`store_true`/`store_false`)
+  now render as toggles with correct defaults. Positional arguments are
+  required by default; optional flags are optional by default. Explicit
+  `type=` annotations map to appropriate CLI types (integer, string, etc.).
 ## 1.0.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
