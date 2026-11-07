@@ -30,6 +30,21 @@ TYPE_TO_CLI = {
     "float": "number",
     "list": "array",
     "dict": "object",
+    "set": "array",
+    "frozenset": "array",
+    "tuple": "array",
+    "sequence": "array",
+    "mapping": "object",
+    "optional": "string",
+    "List": "array",
+    "Dict": "object",
+    "Set": "array",
+    "FrozenSet": "array",
+    "Tuple": "array",
+    "Sequence": "array",
+    "Mapping": "object",
+    "Optional": "string",
+    "Union": "string",
 }
 
 
@@ -69,7 +84,17 @@ def _annotation_name(node: ast.expr | None) -> str | None:
     if isinstance(node, ast.Attribute):
         return node.attr
     if isinstance(node, ast.Subscript):
-        return _annotation_name(node.value)
+        outer = _annotation_name(node.value)
+        slice_node = node.slice
+        if outer is None:
+            return "Any"
+        if isinstance(slice_node, ast.Tuple):
+            elements = slice_node.elts
+        else:
+            elements = [slice_node]
+        inner_names = [_annotation_name(e) for e in elements]
+        inner_names = [n for n in inner_names if n is not None]
+        return f"{outer}[{', '.join(inner_names)}]"
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
         # PEP 604 union like str | None
         return "|".join(
@@ -81,7 +106,11 @@ def _annotation_name(node: ast.expr | None) -> str | None:
 def _cli_type_for(annotation_name: str | None) -> str:
     if not annotation_name:
         return "string"
-    return TYPE_TO_CLI.get(annotation_name.split("|")[0], "string")
+    # Split on | for PEP 604 unions, then take the first non-None type
+    first_type = annotation_name.split("|")[0].strip()
+    # For subscripted generics like List[str], Dict[K, V], extract the base type
+    base_type = first_type.split("[")[0].strip()
+    return TYPE_TO_CLI.get(base_type, "string")
 
 
 def _strip_optional(name: str | None) -> str:
