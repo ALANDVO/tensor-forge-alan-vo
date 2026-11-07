@@ -274,3 +274,7 @@ MIT — see `LICENSE`.
 ---
 
 *Alan Vo* — <alanvo@gmail.com> · GitHub `ALANDVO` · AI & Machine Learning.
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

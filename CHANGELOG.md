@@ -51,3 +51,7 @@ All notable changes to tensor-forge are recorded here. The format is based on
 - OIDC Keycloak SAML-brokering authentication and role authorization.
 - Opt-in LLM advisory explanations (OpenAI/Anthropic/Gemini/Ollama adapters).
 - Multi-language source support (JS/TS/Go/Rust) beyond Python.
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

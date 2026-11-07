@@ -74,3 +74,6 @@ Acceptance:
 - ES/TS AST or parser service extracts entry points
 - Go/Rust function recovery via go/parser and syn
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
