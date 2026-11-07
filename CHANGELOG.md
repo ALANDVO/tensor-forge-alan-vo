@@ -54,4 +54,4 @@ All notable changes to tensor-forge are recorded here. The format is based on
 
 ---
 
-Alan Vo · [alanvo.net](https://alanvo.net)
+Alan Vo · [alanvo.net](https://alanvo.net) · [X: @alanvoasi](https://x.com/alanvoasi)
