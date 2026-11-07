@@ -60,7 +60,11 @@ for c in r.commands: print(c.rendered)
   recovery, argument typing, argparse detection, malformed/unsupported input
   rejection, persistence, and the real HTTP boundary. Frontend build typechecks
   and 3 component tests pass. No LLM was invoked; no numbers were measured
-  via an external model.
+- **Measured results:** backend test suite passes (30 tests) covering domain
+  recovery, argument typing (including typing module generics), argparse detection,
+  malformed/unsupported input rejection, persistence, and the real HTTP boundary.
+  Frontend build typechecks and 3 component tests pass. No LLM was invoked; no
+  numbers were measured via an external model.
 - **Failure cases / limitations:** Python-only in this release; anonymous /
   `*args, **kwargs` parameters are not expanded into typed args; boolean flags
   render as `--flag`/`--no-flag` toggles; no authentication yet (see Security).
@@ -79,6 +83,10 @@ for c in r.commands: print(c.rendered)
 - Responsive React + TypeScript + Vite dashboard: paste source, forge, copy
   commands, and export the manifest as JSON.
 - Deterministic offline engine — works without any LLM key.
+- **Enhanced typing module support:** `Optional`, `Union`, `List`, `Dict`, `Set`,
+  `Tuple`, `Sequence`, `Mapping`, `FrozenSet` annotations map to correct CLI
+  types; built-in collection types (`list[str]`, `dict[str, int]`, etc.) and
+  PEP 604 union syntax (`str | None`) fully supported.
 
 Planned: OIDC/Keycloak SAML brokering, opt-in LLM advisory explanations,
 multi-language source support.
