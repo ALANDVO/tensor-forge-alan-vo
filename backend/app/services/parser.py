@@ -324,6 +324,36 @@ def _argparse_entry_points(tree: ast.Module) -> list[EntryPoint]:
     return points
 
 
+def _main_block_entry_points(tree: ast.Module) -> list[EntryPoint]:
+    """Extract CLI entry points from ``if __name__ == \"__main__\":`` blocks.
+
+    Looks for function definitions inside the main guard block and treats
+    the first such function (or a function named 'main') as the entry point.
+    """
+    points: list[EntryPoint] = []
+    for node in tree.body:
+        if isinstance(node, ast.If) and _is_main_guard(node):
+            # Find function definitions inside the main block
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    spec_args = _build_args(item.args.posonlyargs, item.args.args,
+                                            item.args.defaults, item.args.kwonlyargs,
+                                            item.args.kw_defaults)
+                    summary = _docstring_summary(item)
+                    for s in spec_args:
+                        if not s.help and summary:
+                            s.help = summary
+                    points.append(EntryPoint(
+                        name=item.name if item.name != "__main__" else "main",
+                        kind="main_block",
+                        arguments=spec_args,
+                        docstring=summary,
+                        location=f"line {item.lineno}",
+                    ))
+                    # Only take the first function in the main block as the entry point
+                    break
+    return points
+
 def _is_main_guard(node: ast.If) -> bool:
     test = node.test
     if isinstance(test, ast.Compare) and isinstance(test.left, ast.Name):
@@ -332,7 +362,6 @@ def _is_main_guard(node: ast.If) -> bool:
                 if isinstance(cmp, ast.Constant) and cmp.value == "__main__":
                     return True
     return False
-
 
 # --------------------------------------------------------------------------- #
 # Public entry point
@@ -370,6 +399,7 @@ def extract_entry_points(source: str) -> list[EntryPoint]:
                 location=f"line {node.lineno}",
             ))
     points.extend(_argparse_entry_points(tree))
+    points.extend(_main_block_entry_points(tree))
     return points
 
 
