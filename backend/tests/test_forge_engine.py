@@ -27,7 +27,29 @@ def build_parser():
     parser.add_argument("target", help="target file")
     parser.parse_args()
 '''
+MAIN_BLOCK_SRC = '''
+if __name__ == "__main__":
+    import sys
+    def main(arg: str, verbose: bool = False):
+        """Main entry point."""
+        print(arg)
+    main("hello")
+'''
 
+
+def test_forge_main_block_detected_as_entry_point():
+    result = ForgeEngine().forge(MAIN_BLOCK_SRC, "app")
+    kinds = {c.kind for c in result.commands}
+    assert "main_block" in kinds
+    main = next(c for c in result.commands if c.kind == "main_block")
+    assert main.name == "main"
+    arg_names = {a.name for a in main.arguments}
+    assert "arg" in arg_names
+    assert "verbose" in arg_names
+    # verbose should be optional with default
+    verbose_arg = next(a for a in main.arguments if a.name == "verbose")
+    assert verbose_arg.required is False
+    assert verbose_arg.default == "False"
 SYNTAX_SRC = "def broken(:\n"
 BOOL_TRUE_SRC = 'def flag(active: bool = True):\n    """Toggle feature."""\n    return active\n'
 

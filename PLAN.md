@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-cli-forge-core
+main-block-detection
 
 ## Roadmap
 
@@ -48,6 +48,19 @@ Acceptance:
 Implementation: `backend/app/models/db.py`, `backend/app/api/forge.py`
 
 Tests: `backend/tests/test_api.py`
+
+### main-block-detection — Detect __main__ blocks as CLI entry points
+
+Status: done
+
+Acceptance:
+- if __name__ == "__main__": blocks are detected as entry points
+- Arguments extracted from function signature with types and defaults
+- Rendered as executable shell commands with kind "main_block"
+
+Implementation: `backend/app/services/parser.py`
+
+Tests: `backend/tests/test_forge_engine.py::test_forge_main_block_detected_as_entry_point`
 
 ### auth-oidc — OIDC Keycloak SAML-brokering authentication and role authorization
 
