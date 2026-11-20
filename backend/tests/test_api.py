@@ -135,3 +135,46 @@ def test_forge_command_count_matches_engine(client):
         .json()
     expected = ForgeEngine().forge(source, "c")
     assert len(http_body["commands"]) == len(expected.commands)
+
+def test_oidc_authorize_redirects(client):
+    """OIDC authorize endpoint returns a 302 redirect to Keycloak."""
+    r = client.get("/api/oidc/authorize")
+    assert r.status_code == 302
+    assert "Keycloak" in r.headers.get("Location", "")
+
+
+def test_oidc_callback_missing_code(client):
+    """OIDC callback rejects missing code."""
+    r = client.get("/api/oidc/callback")
+    assert r.status_code == 400
+
+
+def test_oidc_callback_invalid_state(client):
+    """OIDC callback rejects invalid/expired state."""
+    r = client.get("/api/oidc/callback?state=invalid")
+    assert r.status_code == 400
+
+
+def test_oidc_authorize_returns_302(client):
+    """OIDC authorize endpoint returns a 302 redirect."""
+    r = client.get("/api/oidc/authorize")
+    assert r.status_code == 302
+    assert "Location" in r.headers
+
+
+def test_oidc_callback_missing_params(client):
+    """OIDC callback rejects missing code or state."""
+    r = client.get("/api/oidc/callback")
+    assert r.status_code == 400
+
+
+def test_oidc_callback_invalid_state(client):
+    """OIDC callback rejects invalid/expired state."""
+    r = client.get("/api/oidc/callback?state=invalid")
+    assert r.status_code == 400
+
+
+def test_oidc_userinfo_invalid_token(client):
+    """OIDC userinfo rejects invalid token format."""
+    r = client.get("/api/oidc/userinfo?token=invalid")
+    assert r.status_code == 400

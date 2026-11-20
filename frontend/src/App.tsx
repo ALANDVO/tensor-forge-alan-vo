@@ -3,11 +3,13 @@ import type { ForgeRequest, ForgeResponse } from "./api";
 import { forgeSource } from "./api";
 import { ForgeForm } from "./components/ForgeForm";
 import { ForgeResult } from "./components/ForgeResult";
+import { OidcLogin } from "./components/OidcLogin";
 import "./index.css";
 export default function App() {
   const [result, setResult] = useState<ForgeResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOidc, setShowOidc] = useState(false);
 
   const handleSubmit = async (req: ForgeRequest) => {
     setLoading(true);
@@ -24,6 +26,13 @@ export default function App() {
     }
   };
 
+  const handleOidcLogin = (token: string) => {
+    // Store the session token - in production this would be a secure cookie/httpOnly
+    setError(null);
+    // Just mark that we're authenticated; the token is opaque to this demo
+    setShowOidc(false);
+  };
+
   return (
     <div className="container">
       <header>
@@ -37,11 +46,12 @@ export default function App() {
           {error && <div className="error" role="alert">{error}</div>}
         </section>
         {result && <ForgeResult result={result} />}
+        {showOidc && <OidcLogin onLoginSuccess={handleOidcLogin} onError={setError} />}
       </main>
       <footer>
         <small>
           Deterministic offline analysis &middot; LLM advisory is a planned milestone
-          &middot; Alan Vo | AI &amp; Machine Learning
+          &middot; Alan Vo | AI & Machine Learning
         </small>
       </footer>
     </div>
