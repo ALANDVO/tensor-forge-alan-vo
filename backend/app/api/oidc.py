@@ -166,4 +166,5 @@ async def userinfo(token: str = ...) -> dict[str, Any]:
             "expires": datetime.now(timezone.utc).isoformat(),
         }
     except Exception:
-        return {"error": "invalid token"}, 400
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=400, content={"error": "invalid token"})

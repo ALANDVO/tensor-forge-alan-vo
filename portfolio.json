@@ -20,5 +20,5 @@
   "roadmap_auth": "oidc-keycloak-saml-broker (planned milestone)",
   "roadmap_llm": "opt-in advisory explanations with provider adapters (planned milestone)",
   "status": "work-in-progress",
-  "version": "1.5.0"
+  "version": "1.6.0"
 }
