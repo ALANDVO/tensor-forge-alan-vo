@@ -1,6 +1,6 @@
 {
   "name": "tensor-forge-alan-vo",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Forge agent-native CLI command manifests from source code.",
   "private": true,
   "type": "module",
