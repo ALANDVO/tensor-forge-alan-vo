@@ -140,6 +140,15 @@ def _default_repr(node: ast.expr | None) -> str | None:
         return repr(node.value)
     if isinstance(node, ast.Name):
         return node.id
+    # Signed numeric literals like ``-1`` / ``+0.5`` parse as a unary op over a
+    # numeric constant; recover the literal value instead of degrading to "<expr>".
+    if (isinstance(node, ast.UnaryOp)
+            and isinstance(node.op, (ast.UAdd, ast.USub))
+            and isinstance(node.operand, ast.Constant)
+            and isinstance(node.operand.value, (int, float))
+            and not isinstance(node.operand.value, bool)):
+        sign = "-" if isinstance(node.op, ast.USub) else ""
+        return sign + repr(node.operand.value)
     return "<expr>"
 
 
