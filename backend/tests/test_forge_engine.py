@@ -173,3 +173,19 @@ def test_argument_spec_dataclass_roundtrip():
                         default_repr="3", help="count")
     assert spec.name == "n"
     assert spec.default_repr == "3"
+
+NEGATIVE_DEFAULT_SRC = '''
+def shift(offset: int = -1, ratio: float = -0.5):
+    """Shift values by an offset."""
+    return offset
+'''
+
+
+def test_forge_negative_numeric_default_rendered():
+    # Negative numeric defaults must render their literal value, not "<expr>".
+    result = ForgeEngine().forge(NEGATIVE_DEFAULT_SRC, "tool")
+    cmd = result.commands[0]
+    by = {a.name: a for a in cmd.arguments}
+    assert by["offset"].default == "-1"
+    assert by["ratio"].default == "-0.5"
+    assert "<expr>" not in cmd.rendered
